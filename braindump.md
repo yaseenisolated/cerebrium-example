@@ -190,9 +190,78 @@ ok that deployed successfully but i'm still not convinced it's using a dockkerfi
 ok yay with a purposefully broken dockerfile it breaks so yay.
 lets continnue.
 
-
 # Running image generation model with some random input
 
 Ok let's expand from running just an echo to running image model with a constant prompt and then store the result in /persistent-storage with the current date as the filename.
 
 I'm going to copy from the examples to do this. Let's see if it works fine with the dockerfile stuff added.
+
+from the example
+
+model weights in the base image, which loads faster. The total response time is around 18 seconds.
+
+The key part is the shell_commands in the cerebrium.toml file
+
+shell_commands = ["export HF_HOME=/cortex/.cache/huggingface","python3 -c \"import torch; from diffusers import StableDiffusionPipeline; StableDiffusionPipeline.from_pretrained('stabilityai/stable-diffusion-2-1', torch_dtype=torch.float16)\""]
+
+This will download the model at build time.
+
+We probably want to do this in our Dockerfile instead? do shell_commands still work from cerebrium.toml? Let's find out!
+
+## pulling stablediffusion weights
+
+change docker base image to nvidia/cuda:12.1.1-runtime-ubuntu22.04 hopefully the rest works as it.
+
+```
+16:01:11 /bin/sh: 1: pip: not found
+16:01:11 #13 ERROR: process "/bin/sh -c pip install -r requirements.txt" did not complete successfully: exit code: 127
+16:01:11 ------
+16:01:11 > RUN pip install -r requirements.txt:
+16:01:11
+16:01:11 Error: failed to solve: process "/bin/sh -c pip install -r requirements.txt" did not complete successfully: exit code: 127
+16:01:11 Error: App build failed
+```
+
+that's mostly to be expected I guess. we're using a different base image.
+
+try some modifications to dockerfile to pip install stuff gives uuss....
+
+```
+
+16:05:53 CUDA Version 12.1.1
+16:05:53 Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+16:05:53 This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+16:05:53 By pulling and using the container, you accept the terms and conditions of this license:
+16:05:53 https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+16:05:53 A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+16:05:53 WARNING: The NVIDIA Driver was not detected.  GPU functionality will not be available.
+16:05:53 Use the NVIDIA Container Toolkit to start this container with GPU support; see
+16:05:53 https://docs.nvidia.com/datacenter/cloud-native/ .
+16:05:53 /opt/nvidia/nvidia_entrypoint.sh: line 67: exec: python: not found
+```
+
+lame. maybe let's just abandon the fast api stuff for now since i don't actually need it.
+
+Here's the docs for the nvidia/cuda docker image https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/README.md
+
+trying to run the image generation main.py within the docker environment.
+
+i really hope cerebrium has build caching on the server side because the builds are starting to take time to run now. hopefully we can have some short development loops. maybe layer caching stuff from docker?
+
+### missing python modules...
+
+```bash
+16:16:58 File "/main.py", line 22, in <module>
+16:16:58 pipe = StableDiffusionPipeline.from_pretrained(
+16:16:58 File "/usr/local/lib/python3.10/dist-packages/diffusers/utils/dummy_torch_and_transformers_objects.py", line 2147, in from_pretrained
+16:16:58 requires_backends(cls, ["torch", "transformers"])
+16:16:58 File "/usr/local/lib/python3.10/dist-packages/diffusers/utils/import_utils.py", line 525, in requires_backends
+16:16:58 raise ImportError("".join(failed))
+16:16:58 ImportError:
+16:16:58 StableDiffusionPipeline requires the transformers library but it was not found in your environment. You can install it with pip: `pip
+16:16:58 install transformers`
+16:16:58 Loading model...
+```
+
+
+sigh
