@@ -310,3 +310,94 @@ Loading pipeline components: 100%|██████████| 6/6
 ```
 
 the weights are being downloaded.... but then not read appropriately?
+
+maybe the dir for HF_HOME is not useful? really unclear for me.
+
+this bit is turning into a nightmare. how can i debug this? i want to echo the snapshot dir after the caching and then before the runtime tries to use it so that hopefully we can see if they match or don't match.
+
+let's try and use /persistent-storage as the place we store our models and check if that helps at all. at the very least it iwll give us visibility into what's working or not.
+
+it looks like that works! not ideal but we move.
+
+### incompatible torchvision + torch version issues.
+
+```
+18:04:56 operator torchvision::nms does not exist
+```
+
+on the internet found that the versions of torch and torchvision compatibility matters.
+
+i think i'm not at ~2.5 hours invested which is coming close to the 3 hours mentioned in the doc.
+
+i've also gone ahead and changed the machine type to one that contains a GPU.
+
+i suspect that i don't actually need torchvision.... i can't see where the dependency comes from. maybe in the next build attempt i'll remove it and see how far we get.
+
+numpy!
+
+```
+22:59:37 File "/main.py", line 24, in <module>
+22:59:37 pipe = StableDiffusionPipeline.from_pretrained(
+22:59:37 File "/usr/local/lib/python3.10/dist-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+22:59:37 return fn(*args, **kwargs)
+22:59:37 File "/usr/local/lib/python3.10/dist-packages/diffusers/pipelines/pipeline_utils.py", line 961, in from_pretrained
+22:59:37 loaded_sub_model = load_sub_model(
+22:59:37 File "/usr/local/lib/python3.10/dist-packages/diffusers/pipelines/pipeline_loading_utils.py", line 777, in load_sub_model
+22:59:37 loaded_sub_model = load_method(os.path.join(cached_folder, name), **loading_kwargs)
+22:59:37 File "/usr/local/lib/python3.10/dist-packages/diffusers/schedulers/scheduling_utils.py", line 158, in from_pretrained
+22:59:37 return cls.from_config(config, return_unused_kwargs=return_unused_kwargs, **kwargs)
+22:59:37 File "/usr/local/lib/python3.10/dist-packages/diffusers/configuration_utils.py", line 263, in from_config
+22:59:37 model = cls(**init_dict)
+22:59:37 File "/usr/local/lib/python3.10/dist-packages/diffusers/configuration_utils.py", line 693, in inner_init
+22:59:37 init(self, *args, **init_kwargs)
+22:59:37 File "/usr/local/lib/python3.10/dist-packages/diffusers/schedulers/scheduling_ddim.py", line 234, in __init__
+22:59:37 self.timesteps = torch.from_numpy(np.arange(0, num_train_timesteps)[::-1].copy().astype(np.int64))
+22:59:37 RuntimeError: Numpy is not available
+```
+
+23:04:00 CUDA Version 12.1.1
+
+```
+23:04:35 A module that was compiled using NumPy 1.x cannot be run in
+23:04:35 NumPy 2.2.5 as it may crash. To support both 1.x and 2.x
+23:04:35 versions of NumPy, modules must be compiled with NumPy 2.0.
+23:04:35 Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+23:04:35 If you are a user of the module, the easiest solution will be to
+23:04:35 downgrade to 'numpy<2' or try to upgrade the affected module.
+23:04:35 We expect that some modules will need time to support NumPy 2.
+23:04:35 Traceback (most recent call last):  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+23:04:35 return _run_code(code, main_globals, None,
+```
+
+did i install the wrong version of numpy maybe?
+
+yup. gotta do "numpy<2.0"
+
+successs!!!!
+
+```bash
+
+23:09:45 ==========
+23:09:45 == CUDA ==
+23:09:45 CUDA Version 12.1.1
+23:09:45 Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+23:09:45 This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+23:09:45 By pulling and using the container, you accept the terms and conditions of this license:
+23:09:45 https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+23:09:45 A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+23:09:58 Loading model...
+Loading pipeline components...: 100%|██████████| 6/6 [00:05<00:00,  1.17it/s]
+23:10:04 INFO:     Started server process [1]
+23:10:04 INFO:     Waiting for application startup.
+23:10:04 INFO:     Application startup complete.
+23:10:04 INFO:     Uvicorn running on http://0.0.0.0:8192 (Press CTRL+C to quit)
+23:10:04 Loaded.
+23:10:04 Loaded scheduler.
+23:10:04 Enabled memory efficient attention.
+23:10:04 Moved to GPU.
+23:10:04 cuda:0
+23:10:04 INFO:     127.0.0.1:54924 - "GET /ready HTTP/1.1" 200 OK
+23:10:06 INFO:     127.0.0.1:43066 - "GET /ready HTTP/1.1" 200 OK
+23:10:07 App initialized in 24s
+23:10:07 App started successfully!
+```

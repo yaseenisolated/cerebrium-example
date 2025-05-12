@@ -5,7 +5,9 @@ from typing import Optional
 import torch
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from pydantic import BaseModel
+from fastapi import FastAPI
 
+app = FastAPI()
 
 class Item(BaseModel):
     prompt: str
@@ -20,7 +22,7 @@ model_id = "stabilityai/stable-diffusion-2-1"
 # Use the DPMSolverMultistepScheduler (DPM-Solver++) scheduler here instead
 print("Loading model...")
 pipe = StableDiffusionPipeline.from_pretrained(
-    model_id, torch_dtype=torch.float16, local_files_only=True
+    model_id, torch_dtype=torch.float16
 )
 print("Loaded.")
 pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
@@ -33,6 +35,17 @@ print("Moved to GPU.")
 print(pipe.device)
 
 
+
+@app.get("/health")
+def health():
+    return "OK"
+
+@app.get("/ready")
+def ready():
+    return "OK"
+
+
+@app.post("/run")
 def predict(item):
     item = Item(**item)
 
