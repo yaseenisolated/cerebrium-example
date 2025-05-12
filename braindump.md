@@ -271,12 +271,42 @@ also it looks like there is build caching! that went much faster yay.
 
 ok yay it looks like that worked lets try again.
 
-### missing snapshots
+### missing snapshots (stability ai weights)
 
 ```
 16:19:17 huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups
 and downloads online, pass 'local_files_only=False' as input.
 ```
 
-
 I assume this means that the step where we fetch the image in the cerebrium.toml doesn't work anymore and we have to do it in the dockerfile.
+
+saw this in my output but i have no idea what it means
+
+```
+16:22:20 Cannot initialize model with low cpu memory usage because `accelerate` was not found in the environment. Defaulting to `low_cpu_mem_usage=False`. It is strongly recommended to install `accelerate` for
+faster and less memory-intense model loading. You can do so with:
+```
+
+oh is it about my new pull model weights step?
+
+the model still seems to not be in the right place....
+
+```
+download.py", line 220, in snapshot_download
+16:24:42 raise LocalEntryNotFoundError(
+16:24:42 huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups
+and downloads online, pass 'local_files_only=False' as input.
+```
+
+hmmm maybe it's because the HF_HOME env variable isn't being passed into the api server thing? let's try that and see.
+
+nope that wasn't it.
+
+```
+16:31:25 starting downloading image weights
+Fetching 13 files: 100%|██████████| 13/13
+Loading pipeline components: 100%|██████████| 6/6
+16:31:37 done downloading model weights
+```
+
+the weights are being downloaded.... but then not read appropriately?

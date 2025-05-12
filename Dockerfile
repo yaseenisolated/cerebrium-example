@@ -11,6 +11,10 @@ RUN pip install --upgrade pip
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 RUN pip install diffusers transformers
 
+ENV HF_HOME=/cortex/.cache/huggingface
+
+RUN python3 -c "print('starting downloading image weights'); import torch; from diffusers import StableDiffusionPipeline; StableDiffusionPipeline.from_pretrained('stabilityai/stable-diffusion-2-1', torch_dtype=torch.float16); print('done downloading model weights');"
+
 COPY . .
 
 RUN pip install -r requirements.txt
