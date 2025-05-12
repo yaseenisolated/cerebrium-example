@@ -39,16 +39,16 @@ def fetch_news():
 
 def generate_cartoon_description(headline):
 
-    tokenizer = LlamaTokenizer.from_pretrained('openlm-research/open_llama_3b')
+    tokenizer = LlamaTokenizer.from_pretrained('openlm-research/open_llama_3b', device_map='cuda')
     model = LlamaForCausalLM.from_pretrained(
-        'openlm-research/open_llama_3b', torch_dtype=torch.float16, device_map='auto',
+        'openlm-research/open_llama_3b', torch_dtype=torch.float16, device_map='cuda',
     )
 
-    prompt_req = f"Turn this news headline into a funny cartoon-style scene: '{headline}'"
+    prompt_req = f"Turn some of these news headlines into a funny cartoon-style scene: '{headline}'"
 
 
     input_ids = tokenizer(prompt_req, return_tensors="pt").input_ids
-
+    input_ids.to('cuda')
 
     generation_output = model.generate(
         input_ids=input_ids, max_new_tokens=32

@@ -15,10 +15,6 @@ RUN pip install --upgrade pip
 RUN pip install uvicorn
 #RUN mkdir -p $HF_HOME && python3 -c "print('starting downloading image weights'); import torch; from diffusers import StableDiffusionPipeline; StableDiffusionPipeline.from_pretrained('stabilityai/stable-diffusion-2-1', torch_dtype=torch.float16); print('done downloading model weights');"
 
-COPY . .
-
-RUN pip install -r requirements.txt
-
 # Install PyTorch and friends (matching CUDA 12.1)
 RUN pip install \
   torch==2.2.2+cu121 \
@@ -28,6 +24,11 @@ RUN pip install \
   --extra-index-url https://download.pytorch.org/whl/cu121
 
 RUN pip install requests protobuf sentencepiece
+
+COPY . .
+
+RUN pip install -r requirements.txt
+
 
 
 
