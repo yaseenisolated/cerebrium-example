@@ -36,8 +36,12 @@ Send a blank post request to /run using the cerebrium dashboard to trigger the p
 
 #1 and #2 are likely just documentation fixes.
 
+The cerebrium deploy command was definitely a highlight. When the Dockerfile was organised appropriately compiling and deploying took less than 30s which gave really fast debugging loops and made this project a lot easier.
+
 I really liked the streaming logs in various places especially as part of the build step. It helped a ton when debugging.
 
 What a "run" is was not clear to me for a while and i'm not really sure how to interact with it.
 
-For a blow by blow of using cerebrium see my braindump.
+For a blow by blow of using cerebrium and getting bits working see my braindump.
+
+I've definitely hit the maximum hours and stopping here.

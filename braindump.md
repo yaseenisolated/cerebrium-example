@@ -333,6 +333,8 @@ i've also gone ahead and changed the machine type to one that contains a GPU.
 
 i suspect that i don't actually need torchvision.... i can't see where the dependency comes from. maybe in the next build attempt i'll remove it and see how far we get.
 
+### numpy
+
 numpy!
 
 ```
