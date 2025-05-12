@@ -7,8 +7,7 @@ import torch
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from fastapi import FastAPI, HTTPException
 
-from transformers import pipeline as hf_pipeline
-
+from transformers import LlamaTokenizer, LlamaForCausalLM
 
 
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
@@ -39,28 +38,30 @@ def fetch_news():
     return ". ".join(headlines)
 
 def generate_cartoon_description(headline):
-    text_gen = hf_pipeline(
-        "text-generation",
-        model="openlm-research/open_llama_7b",
-        device=0,
-        torch_dtype=torch.float16,
+
+    tokenizer = LlamaTokenizer.from_pretrained('openlm-research/open_llama_3b')
+    model = LlamaForCausalLM.from_pretrained(
+        'openlm-research/open_llama_3b', torch_dtype=torch.float16, device_map='auto',
     )
 
     prompt_req = f"Turn this news headline into a funny cartoon-style scene: '{headline}'"
-    cartoon = text_gen(
-        prompt_req,
-        max_length=100,
-        do_sample=True,
-        top_k=50,
-        temperature=0.7,
-        num_return_sequences=1,
-    )[0]["generated_text"]
+
+
+    input_ids = tokenizer(prompt_req, return_tensors="pt").input_ids
+
+
+    generation_output = model.generate(
+        input_ids=input_ids, max_new_tokens=32
+    )
+
+    description = tokenizer.decode(generation_output[0], skip_special_tokens=True)
+
 
     # Unload LLaMA to free VRAM
-    del text_gen
+    del model
     torch.cuda.empty_cache()
 
-    return cartoon
+    return description
 
 def generate_cartoon_image(description):
     sd_pipe = StableDiffusionPipeline.from_pretrained(

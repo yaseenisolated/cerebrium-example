@@ -27,7 +27,7 @@ RUN pip install \
   diffusers transformers accelerate xformers pydantic safetensors "numpy<2.0" \
   --extra-index-url https://download.pytorch.org/whl/cu121
 
-RUN pip install requests protobuf
+RUN pip install requests protobuf sentencepiece
 
 
 
