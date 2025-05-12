@@ -44,11 +44,11 @@ def generate_cartoon_description(headline):
         'openlm-research/open_llama_3b', torch_dtype=torch.float16, device_map='cuda',
     )
 
-    prompt_req = f"Turn some of these news headlines into a funny cartoon-style scene: '{headline}'"
+    prompt_req = f"Turn some of these news headlines into a funny cartoon-style scene. The scene should be a single panel. Headlines: '{headline}'\n\nCartoon description:"
 
 
     input_ids = tokenizer(prompt_req, return_tensors="pt").input_ids
-    input_ids.to('cuda')
+    input_ids = input_ids.to('cuda')
 
     generation_output = model.generate(
         input_ids=input_ids, max_new_tokens=32

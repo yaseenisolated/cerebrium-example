@@ -468,8 +468,10 @@ did not realize this is an entirely different model but will go ahead with it fo
 
 `LlamaTokenizer requires the SentencePiece library but it was not found in your environment. Checkout the instructions on the`
 
-
 ## mismatched device
 
-```RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu! (when checking argument for argument index in method wrapper_CUDA__index_select)```
+`RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu! (when checking argument for argument index in method wrapper_CUDA__index_select)`
 
+# Cartoon description is nonsense
+
+The output from the open_llama model is mostly nonsense. I suspect that this is because it's an instruct model and i'm formatting my request incorrectly?
