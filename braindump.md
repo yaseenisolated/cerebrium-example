@@ -401,3 +401,41 @@ Loading pipeline components...: 100%|██████████| 6/6 [00:05<
 23:10:07 App initialized in 24s
 23:10:07 App started successfully!
 ```
+
+### Run the model
+
+rye run cerebrium ls
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name ┃ Size ┃ Last Modified ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ output-0.png │ 495.2 kB │ 2025-05-12 21:17:26 │
+
+tada! we've got output from the model.
+
+# Chain llama model that cartoonises
+
+using secrets to store NEWSAPI_KEY. fetch with requests api.
+
+## couldn't load llama 7b
+
+```
+File "/main.py", line 44, in generate_cartoon_description
+text_gen = hf_pipeline(
+
+raise ValueError(
+
+ValueError: Could not load model TheBloke/LLaMA-2-7B-Chat-GGML with any of the following classes: (<class 'transformers.models.auto.modeling_auto.AutoModelForCausalLM'>,). See the original errors:
+
+while loading with AutoModelForCausalLM, an error is thrown:
+
+OSError: TheBloke/LLaMA-2-7B-Chat-GGML does not appear to have a file named pytorch_model.bin but there is a file for TensorFlow weights. Use `from_tf=True` to load this model from those weights
+```
+
+the internet suggests that we use "meta-llama/Llama-2-7b-hf" instead. something about the serialization format ggml vs hf .
+
+
+
+```
+Access to model meta-llama/Llama-2-7b-hf is restricted. You must have access to it and be authenticated to access it. Please log in.
+```
+urgh. 
