@@ -30,6 +30,8 @@ I haven't written any python in maybe 10 years so this may be a bit tricky but w
 
 # Getting started
 
+## Running something locally
+
 Step 1. lets get a simple echo app running on cerebrium. With a dockerfile. Let's follow the guide at https://docs.cerebrium.ai/cerebrium/container-images/custom-dockerfiles
 
 Just gonna copy-paste that dockerfile... I've never heard of uvicorn what's that? apparently the async version of gunicorn + django. I've clearly been out of the ecosystem for a while. Post-modern twisted framework.
@@ -107,3 +109,52 @@ INFO:     127.0.0.1:64406 - "GET /hello HTTP/1.1" 405 Method Not Allowed
  ```
 
  tada! now lets get this working on cerebrium.
+
+ ## running on cerebrium
+
+ ```bash
+rye run cerebrium deploy
+
+...
+
+  pip
+15:37:49 Exporting to image
+15:37:52
+15:37:52 App built in 26s
+15:37:53 Deploying App...
+15:37:54 Image size: 236.53 Mb
+15:37:54 App created. Checking that it starts correctly...
+15:37:57 INFO:     Started server process [7]
+15:37:57 INFO:     Waiting for application startup.
+15:37:57 INFO:     Application startup complete.
+15:37:57 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+15:37:57 Successfully initialized user app
+15:37:58 App initialized in 4s
+15:37:58 App started successfully!
+⠸ Building App...
+╭───────────────────────────────────  my-first-project is now live!   ────────────────────────────────────╮
+│ App Dashboard: https://dashboard.cerebrium.ai/projects/p-793a971b/apps/p-793a971b-my-first-project      │
+│                                                                                                         │
+│ Endpoints:                                                                                              │
+│ POST https://api.cortex.cerebrium.ai/v4/p-793a971b/my-first-project/hello                               │
+│ POST https://api.cortex.cerebrium.ai/v4/p-793a971b/my-first-project/health                              │
+│ POST https://api.cortex.cerebrium.ai/v4/p-793a971b/my-first-project/ready                               │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+➜  my-first-project git:(main)
+
+
+ curl https://api.cortex.cerebrium.ai/v4/p-793a971b/my-first-project/health           
+No Authorization token found
+```
+
+Ok so cerebrium apps run with some auth stuff in the front. let's figure out how that works.
+
+```bash
+curl -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0SWQiOiJwLTc5M2E5NzFiIiwiaWF0IjoxNzQ2OTgxNDU2LCJleHAiOjIwNjI1NTc0NTZ9.ktmQ_hJ5J2gD39dv9-8uZRMOvYVDO-Qx0fDlD9BpCNmokJnItGVBTCa34ro1WpRbyD4oivlioD12FqEXSAUSX4KzPiuGD0efVQMUwOvqx2TU1TPdxq8k2zsumQu0qUbRMoNVYbRohq8HtlitrsVCMBRx7IlgChhoH1oI1NhyhErfy17Zde29YnYJITmpH8nRAEFZqIFt75rP4U9wTopDjTx2Ca4vQulFKAXd6FzU1_2llH1Dl-AzH9wy5dCjogI1tBOOFLT-32z3cGR3hBQTQltJ6ysFyauzrP_5BU48kVi-ajJhU4KaW2x2jIGinobpY7OuXE4I8QGQNEMGmSMkMQ" https://api.cortex.cerebrium.ai/v4/p-793a971b/my-first-project/health                              -X POST
+{"run_id":"3c68292b-6f88-9b7e-949a-ba8ae0a218ea","result":"OK","run_time_ms":0.9446144104003906}%
+```
+
+ok i'm clearly getting the model of how this works incorrect. cerebrium provides some wrapper around the APIs. similar to goog.Operation that helps us manage long running processes? What's the run thing and how can I view it?
+
+
+this was just a fundamental misunderstanding of what Cerebrium was at all. This bits are clearly not meant as generic http servers :p. 
