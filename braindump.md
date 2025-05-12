@@ -433,9 +433,24 @@ OSError: TheBloke/LLaMA-2-7B-Chat-GGML does not appear to have a file named pyto
 
 the internet suggests that we use "meta-llama/Llama-2-7b-hf" instead. something about the serialization format ggml vs hf .
 
-
-
 ```
 Access to model meta-llama/Llama-2-7b-hf is restricted. You must have access to it and be authenticated to access it. Please log in.
 ```
-urgh. 
+
+urgh.
+
+changed the model
+
+## need protobufs as a dependency apparently.
+
+```bash
+File "/usr/local/lib/python3.10/dist-packages/transformers/tokenization_utils_base.py", line 2303, in _from_pretrained
+
+except import_protobuf_decode_error():
+
+File "/usr/local/lib/python3.10/dist-packages/transformers/tokenization_utils_base.py", line 87, in import_protobuf_decode_error
+raise ImportError(PROTOBUF_IMPORT_ERROR.format(error_message))
+requires the protobuf library but it was not found in your environment. Checkout the instructions on the
+installation page of its repo: https://github.com/protocolbuffers/protobuf/tree/master/python#installation and follow the ones
+that match your environment. Please note that you may need to restart your runtime after installation.
+```
