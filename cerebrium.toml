@@ -22,3 +22,9 @@ scaling_target = 100
 scaling_buffer = 0
 roll_out_duration_seconds = 0
 
+
+[cerebrium.runtime.custom]
+port = 8192
+healthcheck_endpoint = "/health"
+readycheck_endpoint = "/ready"
+dockerfile_path = "./Dockerfile"

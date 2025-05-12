@@ -1,21 +1,22 @@
 # Objective:
 
-Build *something* on cerebrium. Has to be deployed with a Dockerfile. 
+Build _something_ on cerebrium. Has to be deployed with a Dockerfile.
 
 Potentially something using AI? Doesn't seem to be a requirement.
 
 # What are we gonna do?
 
 ## What is available on cerebrium:
-- GPU access. 
+
+- GPU access.
 - Arbitrary compute
 - Secrets
 - Volumes, unclear if this necessarily works with dockerfile stuff
 
-
 ## What can I do in 3 hours?
-- Multiplayer tic-tac-toe just to run *some* app. State management will possibly be tricky. I suspect that volumes + custom dockerfiles may be a bit fiddly.
-- Fun image generation app (AI something?). 
+
+- Multiplayer tic-tac-toe just to run _some_ app. State management will possibly be tricky. I suspect that volumes + custom dockerfiles may be a bit fiddly.
+- Fun image generation app (AI something?).
   - Upload image of yourself and get a cartoonified thing?
   - News of the day image. Download some dumps of frontpage news and then do some image generation to do some cartoonification of it? Would be cool to wake up with a new background photo every day.
   - Pull your GOogle Photos for the week and summarise it all up for you with a post? That would be cool.
@@ -26,7 +27,6 @@ Potentially something using AI? Doesn't seem to be a requirement.
 I think i'm going to do the news of the day thing because it has nice and limited scope.
 
 I haven't written any python in maybe 10 years so this may be a bit tricky but we can get it to work!
-
 
 # Getting started
 
@@ -84,40 +84,39 @@ I didn't add a requirements file. Easy fix.
 
 ```bash
  uv pip freeze > requirements.txt
- ```
+```
 
+https://newsapi.org/register/success
 
- https://newsapi.org/register/success
-
- use rye to install python and uv to manage dependencies. 
+use rye to install python and uv to manage dependencies.
 
 ```bash
  rye run uv pip install -r requirements.txto
  rye run python -m uvicorn main:app
- ```
+```
 
- and I get
+and I get
 
- ```bash
- INFO:     Started server process [72876]
+```bash
+INFO:     Started server process [72876]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 INFO:     127.0.0.1:64371 - "GET / HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:64372 - "GET /favicon.ico HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:64406 - "GET /hello HTTP/1.1" 405 Method Not Allowed
- ```
+```
 
- tada! now lets get this working on cerebrium.
+tada! now lets get this working on cerebrium.
 
- ## running on cerebrium
+## running on cerebrium
 
- ```bash
+```bash
 rye run cerebrium deploy
 
 ...
 
-  pip
+ pip
 15:37:49 Exporting to image
 15:37:52
 15:37:52 App built in 26s
@@ -143,7 +142,7 @@ rye run cerebrium deploy
 ➜  my-first-project git:(main)
 
 
- curl https://api.cortex.cerebrium.ai/v4/p-793a971b/my-first-project/health           
+curl https://api.cortex.cerebrium.ai/v4/p-793a971b/my-first-project/health
 No Authorization token found
 ```
 
@@ -156,5 +155,44 @@ curl -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0
 
 ok i'm clearly getting the model of how this works incorrect. cerebrium provides some wrapper around the APIs. similar to goog.Operation that helps us manage long running processes? What's the run thing and how can I view it?
 
+this was just a fundamental misunderstanding of what Cerebrium was at all. This bits are clearly not meant as generic http servers :p.
 
-this was just a fundamental misunderstanding of what Cerebrium was at all. This bits are clearly not meant as generic http servers :p. 
+### storing results
+
+ok so how do i store output into places? I assume that without the dockerfile stuff there's some harness that records our output but how do i do this in the dockerfile case? where do i put results?
+
+If I'm going to be doing the image generation thing I need to be able to fetch the image from somewhere. Where would that be?
+
+Managing files! https://docs.cerebrium.ai/cerebrium/storage/managing-files Let's just store the output here somewhere.
+
+# dockerfile
+
+oh wait. i hadn't configured cerebrium to actually be using the custom dockerfile. I left out the
+
+```
+[cerebrium.runtime.custom]
+port = 8192
+healthcheck_endpoint = "/health"
+readycheck_endpoint = "/ready"
+dockerfile_path = "./Dockerfile"
+```
+
+bit from the cerebrium.toml. let's add that and see what happens.
+
+this seems to be taking longer which probably indicates it's doing some docker things.
+
+ok that deployed successfully but i'm still not convinced it's using a dockkerfile. let me purposefully break the dockerfile and see what happens.
+
+## purposefully broken dockerfile
+
+15:56:51 Error: failed to solve: dockerfile parse error on line 11: unknown instruction: asdfadsfasdf
+
+ok yay with a purposefully broken dockerfile it breaks so yay.
+lets continnue.
+
+
+# Running image generation model with some random input
+
+Ok let's expand from running just an echo to running image model with a constant prompt and then store the result in /persistent-storage with the current date as the filename.
+
+I'm going to copy from the examples to do this. Let's see if it works fine with the dockerfile stuff added.
