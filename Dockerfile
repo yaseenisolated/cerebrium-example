@@ -9,7 +9,7 @@ RUN apt-get install -y python3 python3-pip && \
 
 RUN pip install --upgrade pip
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-RUN pip install diffusers
+RUN pip install diffusers transformers
 
 COPY . .
 

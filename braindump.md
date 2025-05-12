@@ -263,5 +263,20 @@ i really hope cerebrium has build caching on the server side because the builds 
 16:16:58 Loading model...
 ```
 
-
 sigh
+
+added pip install transformers. i should probably be pinning this versions but for expediency reasons i'm not making this too prod safe.
+
+also it looks like there is build caching! that went much faster yay.
+
+ok yay it looks like that worked lets try again.
+
+### missing snapshots
+
+```
+16:19:17 huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups
+and downloads online, pass 'local_files_only=False' as input.
+```
+
+
+I assume this means that the step where we fetch the image in the cerebrium.toml doesn't work anymore and we have to do it in the dockerfile.
