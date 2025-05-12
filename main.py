@@ -1,4 +1,3 @@
-import base64
 import io
 import os
 import requests
@@ -7,14 +6,19 @@ import torch
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from fastapi import FastAPI, HTTPException
 
-from transformers import LlamaTokenizer, LlamaForCausalLM
-
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from huggingface_hub import login
 
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
 if not NEWSAPI_KEY:
     raise RuntimeError("Please set the NEWSAPI_KEY environment variable")
 
 NEWSAPI_URL = "https://newsapi.org/v2/top-headlines"
+
+hf_token = os.getenv("HF_TOKEN")
+if not hf_token:
+    raise RuntimeError("Please set the HF_TOKEN environment variable")
+login(token=hf_token)
 
 
 app = FastAPI()
@@ -39,29 +43,41 @@ def fetch_news():
 
 def generate_cartoon_description(headline):
 
-    tokenizer = LlamaTokenizer.from_pretrained('openlm-research/open_llama_3b', device_map='cuda')
-    model = LlamaForCausalLM.from_pretrained(
-        'openlm-research/open_llama_3b', torch_dtype=torch.float16, device_map='cuda',
+    prompt = f"Turn some of these news headlines into a funny cartoon-style scene. The scene should be a single panel. Headlines: '{headline}'\n\nCartoon description:"
+    MODEL_ID = "EleutherAI/gpt-neo-2.7B"
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODEL_ID,
+        use_auth_token=hf_token
     )
 
-    prompt_req = f"Turn some of these news headlines into a funny cartoon-style scene. The scene should be a single panel. Headlines: '{headline}'\n\nCartoon description:"
+    # AutoModelForCausalLM loads the PyTorch weights onto GPU or CPU
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
+        torch_dtype=torch.float16,
+        use_auth_token=hf_token
+    )
+    model.to("cuda")
 
-
-    input_ids = tokenizer(prompt_req, return_tensors="pt").input_ids
-    input_ids = input_ids.to('cuda')
-
-    generation_output = model.generate(
-        input_ids=input_ids, max_new_tokens=32
+    text_gen = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
     )
 
-    description = tokenizer.decode(generation_output[0], skip_special_tokens=True)
+    outputs = text_gen(
+        prompt,
+        max_new_tokens=100,
+        do_sample=True,
+        top_k=50,
+        temperature=0.7,
+        num_return_sequences=1,
+    )
 
-
-    # Unload LLaMA to free VRAM
     del model
     torch.cuda.empty_cache()
 
-    return description
+    return outputs[0]["generated_text"]
 
 def generate_cartoon_image(description):
     sd_pipe = StableDiffusionPipeline.from_pretrained(
@@ -83,12 +99,9 @@ def generate_cartoon_image(description):
         num_images_per_prompt=1,
     ).images
 
-    # Encode and persist
-    result_b64 = []
     for idx, im in enumerate(ims):
         buf = io.BytesIO()
         im.save(buf, format="PNG")
-        result_b64.append(base64.b64encode(buf.getvalue()).decode())
         im.save(f"/persistent-storage/cartoon-{idx}.png")
 
     # unload the model
